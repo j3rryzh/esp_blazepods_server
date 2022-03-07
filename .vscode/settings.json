@@ -1,0 +1,8 @@
+{
+    "liveServer.settings.https": {
+        "enable": true,
+        "cert": "C:\\Users\\Jerry\\Documents\\codes\\project\\openssl\\server.crt",
+        "key": "C:\\Users\\Jerry\\Documents\\codes\\project\\openssl\\server.key",
+        "passphrase": "1234"
+    }
+}
