@@ -10,36 +10,8 @@
 
 <body>
     <button id="the-button">Try it</button>
-    <script>
-        let a;
-        const SERVICE_UUID = '299e1ad8-e2b0-4f85-9aeb-d884823b790f';
-        const NordicUARTTxCharacteristicUUID = '6E400002-B5A3-F393-E0A9-E50E24DCCA9E';
-        const NordicUARTRxCharacteristicUUID = '6E400003-B5A3-F393-E0A9-E50E24DCCA9E';
-        const button = document.querySelector('#the-button');
-        button.addEventListener('click', function () {
-            navigator.bluetooth.requestDevice({
-                filters: [{
-                    namePrefix: "BP"
-                }],
-                optionalServices: [SERVICE_UUID]
-            }).then(device => {
-                console.log(device);
-                a = device;
-                return device.gatt.connect();
-            }).then((server) => {
-                console.log(server);
-                console.log(SERVICE_UUID.toLowerCase());
-                return server.getPrimaryService(SERVICE_UUID);
-            }).then((service) => {
-                console.log(service);
-                return service.getCharacteristics();
-            }).then((characteristics) => {
-                console.log(characteristics);
-            }).catch((error) => {
-                console.error('Connection failed!', error);
-            });
-        });
-    </script>
+    <button id="send">Send it</button>
+    <script src="/index.js"></script>
 </body>
 
 </html>
