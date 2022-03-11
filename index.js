@@ -1,12 +1,27 @@
 const SERVICE_UUID = '299e1ad8-e2b0-4f85-9aeb-d884823b790f';
 const TX_Characteristic = '9fdc5395-42de-47fe-b448-60a46e7c1194';
 const RX_Characteristic = 'eb2064dc-84f7-4a33-8dfd-69e36718d7cd';
-const database = [];
+const devices = [];
+var players = [{ rgb: [55, 0, 0], score: 0 }, { rgb: [0, 55, 0], score: 0 }];
+var gameMode = 0;
 
+function print(data) {
+    document.querySelector('#console').innerHTML += `${data}\n`;
+}
 function messageHandler(event) {
     const message = Array.from(new Uint8Array(event.target.value.buffer));
-    console.log(this.name);
-    console.log(message);
+    if (message[0] == 2) {
+        print(`Game mode is set to ${message[1]}`);
+    }
+    if (gameMode == 1 & message[0] == 1) {
+        for (let player of players) {
+            if (this.rgb == player.rgb) {
+                player.score++;
+                mole().setRgbValue = player.rgb;
+                this.rgb = [0, 0, 0];
+            }
+        }
+    }
 }
 
 class Device {
@@ -21,9 +36,10 @@ class Device {
     }
 
     handleDeviceDisconnect(event) {
-        console.log(`Device ${this.name} has disconnected`);
+        print(`Device ${this.name} has disconnected`);
     }
-    set newRGB(value) {
+
+    set setRgbValue(value) {
         this.rgb = value;
         this.sender.writeValue(new Uint8Array([6, 0, 0, ...this.rgb]));
     }
@@ -40,7 +56,7 @@ async function requestAndConnect() {
             optionalServices: [SERVICE_UUID]
         })
     } catch (err) {
-        console.log(err)
+        print(err)
     }
 
     let server = await device.gatt.connect();
@@ -48,8 +64,8 @@ async function requestAndConnect() {
     let tx_characteristic = await service.getCharacteristic(TX_Characteristic);
     let rx_characteristic = await service.getCharacteristic(RX_Characteristic);
     let blazepod = new Device(device, rx_characteristic, tx_characteristic);
-    database.push(blazepod);
-    console.log(`Device ${device.name} has connected`);
+    devices.push(blazepod);
+    print(`Device ${device.name} has connected`);
 };
 
 const connect_button = document.querySelector('#connect');
@@ -59,9 +75,10 @@ const game_mode_01 = document.querySelector('#game_mode_01');
 game_mode_01.addEventListener('click', setGameMode01);
 
 async function setGameMode01() {
-    for (let i of database) {
-        await i.sender.writeValue(new Uint8Array([2, 1]));
+    for (let device of devices) {
+        await device.sender.writeValue(new Uint8Array([2, 1]));
     }
+    gameMode = 1;
 }
 
 const start_button = document.querySelector('#start');
@@ -69,20 +86,34 @@ start_button.addEventListener('click', start);
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
+function mole() {
+    let i = Math.floor(Math.random() * devices.length);
+    if (devices[i].rgb.every(x => x == 0)) {
+        return mole();
+    }
+    return devices[i];
+}
+
 async function start() {
-    for (let i of database) {
-        i.newRGB = [55, 0, 0];
+    if (gameMode == 1) {
+        for (let device of devices) {
+            device.setRgbValue = [55, 0, 0];
+        }
+        await sleep(1500);
+        for (let device of devices) {
+            device.setRgbValue = [55, 55, 0];
+        }
+        await sleep(1500);
+        for (let device of devices) {
+            device.setRgbValue = [0, 55, 0];
+        }
+        await sleep(1500);
+        for (let device of devices) {
+            device.setRgbValue = [0, 0, 0];
+        }
+        for (let player of players) {
+            mole().setRgbValue = player.rgb;
+        }
     }
-    await sleep(1500);
-    for (let i of database) {
-        i.newRGB = [55, 55, 0];
-    }
-    await sleep(1500);
-    for (let i of database) {
-        i.newRGB = [0, 55, 0];
-    }
-    await sleep(1500);
-    for (let i of database) {
-        i.newRGB = [0, 0, 0];
-    }
+    print(`Please set the game mode.`);
 }
