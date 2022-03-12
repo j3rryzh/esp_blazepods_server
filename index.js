@@ -2,7 +2,7 @@ const SERVICE_UUID = '299e1ad8-e2b0-4f85-9aeb-d884823b790f';
 const TX_Characteristic = '9fdc5395-42de-47fe-b448-60a46e7c1194';
 const RX_Characteristic = 'eb2064dc-84f7-4a33-8dfd-69e36718d7cd';
 const devices = [];
-var players = [{ rgb: [55, 0, 0], score: 0 }, { rgb: [0, 55, 0], score: 0 }];
+var players = [{ rgb: [155, 0, 0], score: 0 },];
 var gameMode = 0;
 
 function print(data) {
@@ -13,9 +13,11 @@ function messageHandler(event) {
     if (message[0] == 2) {
         print(`Game mode is set to ${message[1]}`);
     }
-    if (gameMode == 1 & message[0] == 1) {
+    if (gameMode == 1 && message[0] == 1) {
+        console.log(message);
         for (let player of players) {
-            if (this.rgb == player.rgb) {
+            console.log(this);
+            if (this.rgb.every((value, index) => value == player.rgb[index])) {
                 player.score++;
                 mole().setRgbValue = player.rgb;
                 this.rgb = [0, 0, 0];
@@ -30,7 +32,7 @@ class Device {
         this.sender = rx;
         this.receiver = tx;
         this.rgb = [0, 0, 0];
-        this.receiver.addEventListener('characteristicvaluechanged', messageHandler.bind(this.device));
+        this.receiver.addEventListener('characteristicvaluechanged', messageHandler.bind(this));
         this.device.addEventListener('gattserverdisconnected', this.handleDeviceDisconnect);
         this.receiver.startNotifications();
     }
@@ -40,8 +42,12 @@ class Device {
     }
 
     set setRgbValue(value) {
-        this.rgb = value;
-        this.sender.writeValue(new Uint8Array([6, 0, 0, ...this.rgb]));
+        try {
+            this.rgb = value;
+            this.sender.writeValue(new Uint8Array([6, 0, 0, ...this.rgb]));
+        } catch (error) {
+            console.log(error);
+        }
     }
 }
 
@@ -89,13 +95,15 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 function mole() {
     let i = Math.floor(Math.random() * devices.length);
     if (devices[i].rgb.every(x => x == 0)) {
-        return mole();
+        return devices[i];
     }
-    return devices[i];
+    return mole();
 }
 
 async function start() {
-    if (gameMode == 1) {
+    if (gameMode == 0) {
+        print(`Please set the game mode.`);
+    } else if (gameMode == 1) {
         for (let device of devices) {
             device.setRgbValue = [55, 0, 0];
         }
@@ -111,9 +119,11 @@ async function start() {
         for (let device of devices) {
             device.setRgbValue = [0, 0, 0];
         }
+        await sleep(500);
         for (let player of players) {
             mole().setRgbValue = player.rgb;
         }
+        // devices[0].setRgbValue = players[0].rgb;
     }
-    print(`Please set the game mode.`);
+
 }
