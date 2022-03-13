@@ -2,11 +2,12 @@ const SERVICE_UUID = '299e1ad8-e2b0-4f85-9aeb-d884823b790f';
 const TX_Characteristic = '9fdc5395-42de-47fe-b448-60a46e7c1194';
 const RX_Characteristic = 'eb2064dc-84f7-4a33-8dfd-69e36718d7cd';
 const devices = [];
-var players = [{ rgb: [155, 0, 0], score: 0 },];
+var players = [{ rgb: [255, 0, 0], score: 0 },];
 var gameMode = 0;
 
 function print(data) {
-    document.querySelector('#console').innerHTML += `${data}\n`;
+    document.querySelector('#console').innerHTML += `${data}
+    `;
 }
 function messageHandler(event) {
     const message = Array.from(new Uint8Array(event.target.value.buffer));
@@ -16,7 +17,6 @@ function messageHandler(event) {
     if (gameMode == 1 && message[0] == 1) {
         console.log(message);
         for (let player of players) {
-            console.log(this);
             if (this.rgb.every((value, index) => value == player.rgb[index])) {
                 player.score++;
                 mole().setRgbValue = player.rgb;
@@ -70,6 +70,7 @@ async function requestAndConnect() {
     let tx_characteristic = await service.getCharacteristic(TX_Characteristic);
     let rx_characteristic = await service.getCharacteristic(RX_Characteristic);
     let blazepod = new Device(device, rx_characteristic, tx_characteristic);
+
     devices.push(blazepod);
     print(`Device ${device.name} has connected`);
 };
@@ -86,6 +87,34 @@ async function setGameMode01() {
     }
     gameMode = 1;
 }
+
+const player = document.querySelector('#player');
+const p1 = document.querySelector('#p1');
+const p2 = document.querySelector('#p2');
+
+player.addEventListener('change', (event) => {
+    if (event.target.value == "1") {
+        let p1rgb = p1.value;
+        players = [{ rgb: [Number(`0x${p1rgb.slice(1, 3)}`), Number(`0x${p1rgb.slice(3, 5)}`), Number(`0x${p1rgb.slice(5, 7)}`)], score: 0 },];
+        p2.parentElement.style.display = "none";
+    } else if (event.target.value == "2") {
+        let p1rgb = p1.value;
+        let p2rgb = p2.value;
+        players = [{ rgb: [Number(`0x${p1rgb.slice(1, 3)}`), Number(`0x${p1rgb.slice(3, 5)}`), Number(`0x${p1rgb.slice(5, 7)}`)], score: 0 }, { rgb: [Number(`0x${p2rgb.slice(1, 3)}`), Number(`0x${p2rgb.slice(3, 5)}`), Number(`0x${p2rgb.slice(5, 7)}`)], score: 0 }];
+        p2.parentElement.style.display = "inline";
+    }
+});
+p1.addEventListener("change", (event) => {
+    let str = event.target.value
+    players[0].rgb = [Number(`0x${str.slice(1, 3)}`), Number(`0x${str.slice(3, 5)}`), Number(`0x${str.slice(5, 7)}`)];
+}
+);
+p2.addEventListener("change", (event) => {
+    let str = event.target.value
+    players[1].rgb = [Number(`0x${str.slice(1, 3)}`), Number(`0x${str.slice(3, 5)}`), Number(`0x${str.slice(5, 7)}`)];
+}
+);
+
 
 const start_button = document.querySelector('#start');
 start_button.addEventListener('click', start);
@@ -104,6 +133,9 @@ async function start() {
     if (gameMode == 0) {
         print(`Please set the game mode.`);
     } else if (gameMode == 1) {
+        for (let player of players) {
+            player.score = 0;
+        }
         for (let device of devices) {
             device.setRgbValue = [55, 0, 0];
         }
@@ -123,7 +155,19 @@ async function start() {
         for (let player of players) {
             mole().setRgbValue = player.rgb;
         }
-        // devices[0].setRgbValue = players[0].rgb;
+        await sleep(60000);
+        if (players[0].score > players[1].score) {
+            for (let device of devices) {
+                device.setRgbValue = players[0].rgb;
+            }
+        } else if (players[0].score < players[1].score) {
+            for (let device of devices) {
+                device.setRgbValue = players[1].rgb;
+            }
+        } else {
+            for (let device of devices) {
+                device.setRgbValue = [255, 255, 255];
+            }
+        }
     }
-
 }

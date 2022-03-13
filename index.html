@@ -6,12 +6,37 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>demo</title>
+    <style>
+        div {
+            padding: 5px;
+        }
+    </style>
 </head>
 
 <body>
-    <button id="connect">Search and Connect</button>
-    <button id="game_mode_01">Whac-A-Mole</button>
-    <button id="start">Start</button>
+    <div>
+        <button id="connect">Search and Connect</button>
+    </div>
+    <div>
+        <button id="game_mode_01">Whac-A-Mole</button>
+    </div>
+    <div>
+        <select id="player">
+            <option value="1" selected>1</option>
+            <option value="2">2</option>
+        </select>
+        <span>
+            <label for="p1">Player 1</label>
+            <input type="color" id="p1" value="#ff0000">
+        </span>
+        <span style="display: none;">
+            <label for="p2">Player 2</label>
+            <input type="color" id="p2" value="#00ff00">
+        </span>
+    </div>
+    <div>
+        <button id="start">Start</button>
+    </div>
     <div id="console"></div>
     <script src="./index.js"></script>
 </body>
