@@ -18,7 +18,7 @@ function messageHandler(event) {
         for (let player of players) {
             if (this.rgb.every((value, index) => value == player.rgb[index])) {
                 player.score++;
-                mole().ledSteady = player.rgb;
+                mole().ledSteady(player.rgb);
                 this.rgb = [0, 0, 0];
             }
         }
@@ -26,41 +26,29 @@ function messageHandler(event) {
 }
 
 class Device {
-    constructor(device, rx, tx) {
-        this.device = device;
+    constructor(bluetooth_device, rx, tx) {
+        this.bluetooth_device = bluetooth_device;
         this.sender = rx;
         this.receiver = tx;
         this.rgb = [0, 0, 0];
         this.receiver.addEventListener('characteristicvaluechanged', messageHandler.bind(this));
-        this.device.addEventListener('gattserverdisconnected', this.handleDeviceDisconnect);
         this.receiver.startNotifications();
     }
 
-    handleDeviceDisconnect(event) {
-        print(`Device ${this.name} has disconnected`);
+    ledSteady(value) {
+        this.rgb = value;
+        this.sender.writeValue(new Uint8Array([6, 0, 0, ...this.rgb]));
     }
 
-    set ledSteady(value) {
-        try {
-            this.rgb = value;
-            this.sender.writeValue(new Uint8Array([6, 0, 0, ...this.rgb]));
-        } catch (error) {
-            console.log(error);
-        }
-    }
-    set ledBlink(value) {
-        try {
-            this.rgb = value;
-            this.sender.writeValue(new Uint8Array([6, 0, 1, ...this.rgb]));
-        } catch (error) {
-            console.log(error);
-        }
+    ledBlink(value) {
+        this.rgb = value;
+        this.sender.writeValue(new Uint8Array([6, 0, 1, ...this.rgb]));
     }
 }
 
 async function requestAndConnect() {
     try {
-        var device = await navigator.bluetooth.requestDevice({
+        var bluetooth_device = await navigator.bluetooth.requestDevice({
             filters: [
                 {
                     namePrefix: 'BP'
@@ -72,26 +60,27 @@ async function requestAndConnect() {
         print(err)
     }
 
-    let server = await device.gatt.connect();
+    let server = await bluetooth_device.gatt.connect();
     let service = await server.getPrimaryService(SERVICE_UUID);
     let tx_characteristic = await service.getCharacteristic(TX_Characteristic);
     let rx_characteristic = await service.getCharacteristic(RX_Characteristic);
 
     // Check if device is already in devices
-    if (devices.every(d => d.device.name != device.name)) {
-        let blazepod = new Device(device, rx_characteristic, tx_characteristic);
+    if (devices.every(device => device.bluetooth_device.name != bluetooth_device.name)) {
+        let blazepod = new Device(bluetooth_device, rx_characteristic, tx_characteristic);
+        blazepod.bluetooth_device.ongattserverdisconnected = disconnectHandler;
         devices.push(blazepod);
-        print(`Device ${device.name} has connected`);
+        refleshDevicesList();
     }
-    const devices_list = document.querySelector('#devices_list');
-    let status_list = '';
-    for (let device of devices) {
-        let status = `<span style='color:red'>disconnected</span>`;
-        if (device.device.gatt.connected == true) { status = `<span style='color:green'>connected</span>` }
-        status_list += `<li>${device.device.name} -- ${status}</li>`;
-    }
-    devices_list.innerHTML = status_list;
 };
+
+async function disconnectHandler() {
+    if (confirm(`${this.name} is disconnected, reconnect?`)) {
+        this.gatt.connect();
+    } else {
+        return;
+    }
+}
 
 document.querySelector('#connect').addEventListener('click', requestAndConnect);
 
@@ -157,39 +146,62 @@ async function start() {
         }
         // Starting signal: red, yellow, green
         for (let device of devices) {
-            device.ledSteady = [55, 0, 0];
+            device.ledSteady([55, 0, 0]);
         }
         await sleep(1500);
         for (let device of devices) {
-            device.ledSteady = [55, 55, 0];
+            device.ledSteady([55, 55, 0]);
         }
         await sleep(1500);
         for (let device of devices) {
-            device.ledSteady = [0, 55, 0];
+            device.ledSteady([0, 55, 0]);
         }
         await sleep(1500);
         for (let device of devices) {
-            device.ledSteady = [0, 0, 0];
+            device.ledSteady([0, 0, 0]);
         }
         await sleep(500);
         for (let player of players) {
-            mole().ledSteady = player.rgb;
+            mole().ledSteady(player.rgb);
         }
+        // TODO: set game time
         await sleep(60000);
         setGameMode(1);
         if (players[0].score > players[1].score) {
             for (let device of devices) {
-                device.ledBlink = players[0].rgb;
+                device.ledBlink(players[0].rgb);
             }
         } else if (players[0].score < players[1].score) {
             for (let device of devices) {
-                device.ledBlink = players[1].rgb;
+                device.ledBlink(players[1].rgb);
             }
         } else {
             for (let device of devices) {
-                device.ledBlink = [255, 255, 255];
+                device.ledBlink([255, 255, 255]);
             }
         }
     }
 }
 
+// TODO: When to reflesh devices list? (use proxy object)
+async function refleshDevicesList() {
+    const devices_list = document.querySelector('#devices_list');
+    devices_list.innerHTML = ``;
+    const status_lists = document.createElement('ul');
+    for (let device of devices) {
+        let status = `<span style='color:red'>disconnected</span>`;
+        if (device.bluetooth_device.gatt.connected == true) status = `<span style='color:green'>connected</span>`;
+        const reconnect_btn = document.createElement('button');
+        reconnect_btn.innerText = `Reconnect`;
+        reconnect_btn.addEventListener('click', async () => { device.bluetooth_device.gatt.connect(); });
+        const status_list = document.createElement('li');
+        status_list.innerHTML = `${device.bluetooth_device.name} -- ${status}    `;
+        status_list.appendChild(reconnect_btn);
+        status_lists.appendChild(status_list);
+    }
+    devices_list.appendChild(status_lists);
+    const reflesh_btn = document.createElement('button');
+    reflesh_btn.innerText = `Reflesh`;
+    reflesh_btn.addEventListener('click', refleshDevicesList);
+    devices_list.appendChild(reflesh_btn);
+}
