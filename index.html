@@ -18,7 +18,10 @@
         <button id="connect">Search and Connect</button>
     </div>
     <div>
-        <button id="game_mode_01">Whac-A-Mole</button>
+        <select id="game_mode">
+            <option value="1" selected>--- Game Mode ---</option>
+            <option value="2">Whac-A-Mole</option>
+        </select>
     </div>
     <div>
         <select id="player">
@@ -26,17 +29,18 @@
             <option value="2">2</option>
         </select>
         <span>
-            <label for="p1">Player 1</label>
-            <input type="color" id="p1" value="#ff0000">
+            <label for="p1_color">Player 1</label>
+            <input type="color" id="p1_color" value="#ff0000">
         </span>
         <span style="display: none;">
-            <label for="p2">Player 2</label>
-            <input type="color" id="p2" value="#00ff00">
+            <label for="p2_color">Player 2</label>
+            <input type="color" id="p2_color" value="#00ff00">
         </span>
     </div>
     <div>
         <button id="start">Start</button>
     </div>
+    <div id="devices_list"></div>
     <div id="console"></div>
     <script src="./index.js"></script>
 </body>
