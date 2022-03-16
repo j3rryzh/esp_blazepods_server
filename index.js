@@ -3,7 +3,7 @@ const TX_Characteristic = '9fdc5395-42de-47fe-b448-60a46e7c1194';
 const RX_Characteristic = 'eb2064dc-84f7-4a33-8dfd-69e36718d7cd';
 const devices = [];
 var players = [{ rgb: [255, 0, 0], score: 0 },];
-var game_mode = 0;
+var game_mode = 1;
 
 function print(data) {
     document.querySelector('#console').innerHTML += `<p>${data}</p>`;
@@ -13,7 +13,7 @@ function messageHandler(event) {
     if (message[0] == 2) {
         print(`Game mode is set to ${message[1]}`);
     }
-    if (game_mode == 1 && message[0] == 1) {
+    if (game_mode == 2 && message[0] == 1) {
         console.log(message);
         for (let player of players) {
             if (this.rgb.every((value, index) => value == player.rgb[index])) {
@@ -138,9 +138,9 @@ function mole() {
 }
 
 async function start() {
-    if (game_mode == 0) {
+    if (game_mode == 1) {
         print(`Please set the game mode.`);
-    } else if (game_mode == 1) {
+    } else if (game_mode == 2) {
         for (let player of players) {
             player.score = 0;
         }
@@ -166,7 +166,7 @@ async function start() {
         }
         // TODO: set game time
         await sleep(60000);
-        setGameMode(1);
+        setGameMode(2);
         if (players[0].score > players[1].score) {
             for (let device of devices) {
                 device.ledBlink(players[0].rgb);
