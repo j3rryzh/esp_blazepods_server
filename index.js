@@ -85,7 +85,7 @@ async function disconnectHandler() {
 document.querySelector('#connect').addEventListener('click', requestAndConnect);
 
 document.querySelector('#game_mode').addEventListener('change', event => {
-    setGameMode(event.target.value);
+    setGameMode(parseInt(event.target.value));
 });
 
 async function setGameMode(mode) {
@@ -165,7 +165,7 @@ async function start() {
             mole().ledSteady(player.rgb);
         }
         // TODO: set game time
-        await sleep(60000);
+        await sleep(10000);
         setGameMode(2);
         if (players[0].score > players[1].score) {
             for (let device of devices) {
