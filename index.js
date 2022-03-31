@@ -165,19 +165,23 @@ async function start() {
             mole().ledSteady(player.rgb);
         }
         // TODO: set game time
-        await sleep(10000);
-        setGameMode(2);
-        if (players[0].score > players[1].score) {
-            for (let device of devices) {
-                device.ledBlink(players[0].rgb);
+        await sleep(2000);
+        setGameMode(1);
+        var highest_score = 0;
+        var winner = null;
+        for (let player of players) {
+            if (player.score > highest_score) {
+                highest_score = player.score;
+                winner = player;
             }
-        } else if (players[0].score < players[1].score) {
+        }
+        if (highest_score == 0) {
             for (let device of devices) {
-                device.ledBlink(players[1].rgb);
+                device.ledBlink([255, 255, 255]);
             }
         } else {
             for (let device of devices) {
-                device.ledBlink([255, 255, 255]);
+                device.ledBlink(winner.rgb);
             }
         }
     }
