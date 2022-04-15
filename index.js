@@ -57,7 +57,7 @@ async function requestAndConnect() {
             optionalServices: [SERVICE_UUID]
         })
     } catch (err) {
-        print(err)
+        console.log()
     }
 
     let server = await bluetooth_device.gatt.connect();
@@ -164,9 +164,14 @@ async function start() {
         for (let player of players) {
             mole().ledSteady(player.rgb);
         }
-        // TODO: set game time
-        await sleep(2000);
+
+        // Set game time
+        let game_time = parseInt(document.querySelector('#game_time').value);
+        await sleep(game_time);
+
         setGameMode(1);
+        document.querySelector('#game_mode').value = '1'
+
         var highest_score = 0;
         var winner = null;
         for (let player of players) {
