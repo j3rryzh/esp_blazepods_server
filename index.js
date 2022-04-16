@@ -167,10 +167,10 @@ async function start() {
 
         // Set game time
         let game_time = parseInt(document.querySelector('#game_time').value);
-        await sleep(game_time);
+        await sleep(game_time * 1000);
 
         setGameMode(1);
-        document.querySelector('#game_mode').value = '1'
+        // document.querySelector('#game_mode').value = '1'
 
         var highest_score = 0;
         var winner = null;
